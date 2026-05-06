@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeloDTP Image Preparation Tool V2.8 - User Manual</title>
+    <style>
+        :root {
+            --primary: #005a9e;
+            --secondary: #4f8ef7;
+            --success: #34d399;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .toc {
+            width: 260px;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 30px 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+        }
+
+        .toc h3 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        .toc ul { list-style: none; padding: 0; }
+        .toc li { margin-bottom: 12px; }
+        .toc a {
+            text-decoration: none; color: var(--text-dark); font-weight: 500; transition: color 0.2s;
+        }
+        .toc a:hover { color: var(--secondary); }
+
+        .content {
+            margin-left: 300px; padding: 40px 60px; max-width: 900px;
+            background: white; min-height: 100vh; box-shadow: -2px 0 8px rgba(0,0,0,0.02);
+        }
+
+        h1 { font-size: 2.2rem; color: var(--primary); border-bottom: 3px solid var(--border); padding-bottom: 10px; }
+        h2 { font-size: 1.5rem; color: var(--primary); margin-top: 40px; border-left: 4px solid var(--secondary); padding-left: 15px; background: #f1f5f9; padding: 8px 15px; border-radius: 0 4px 4px 0;}
+        h3 { font-size: 1.2rem; color: #334155; margin-top: 25px; }
+        p { font-size: 1.05rem; }
+
+        .callout { padding: 15px 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        .info { background-color: #eff6ff; border-color: var(--secondary); }
+        .warning { background-color: #fffbeb; border-color: var(--warning); }
+        .danger { background-color: #fef2f2; border-color: var(--danger); }
+        .callout strong { display: block; margin-bottom: 8px; font-size: 1.05rem; }
+
+        .step-list { counter-reset: step-counter; list-style: none; padding: 0; }
+        .step-list li {
+            position: relative; padding: 12px 20px 12px 50px; margin-bottom: 10px;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+        }
+        .step-list li::before {
+            counter-increment: step-counter; content: counter(step-counter);
+            position: absolute; left: 12px; top: 12px; width: 24px; height: 24px;
+            background-color: var(--secondary); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;
+        }
+
+        .mouse-action { background: white; border: 1px solid var(--border); padding: 10px 15px; margin-top: 10px; border-radius: 6px; display: inline-block; font-size: 0.95rem; width: 100%; box-sizing: border-box;}
+        .mouse-action span { color: var(--secondary); font-weight: 600; margin-right: 10px;}
+
+        kbd {
+            background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;
+            padding: 2px 6px; font-family: monospace; font-size: 0.9em; box-shadow: 0 1px 0 #cbd5e1;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 10px 15px; text-align: left; }
+        th { background-color: #f8fafc; color: var(--primary); }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .content { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toc">
+        <h3>Navigation</h3>
+        <ul>
+            <li><a href="#intro">1. Introduction</a></li>
+            <li><a href="#globals">2. Basic Settings & Controls</a></li>
+            <li><a href="#tab1-2">3. Standard Full-text OCR (Hidden)</a></li>
+            <li><a href="#tab3">4. Mask Mode (Tab 3)</a></li>
+            <li><a href="#tab4">5. Static Image to PSD (Tab 4)</a></li>
+            <li><a href="#tab5">6. PSD/AI Export & Import (Tab 5)</a></li>
+            <li><a href="#changelog">7. Changelog</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1 id="intro">Welocalize DTP Image Preparation Tool V2.8</h1>
+        <p>The Welocalize DTP Image Preparation Tool integrates Google Gemini and Anthropic Claude models, and supports calling Adobe software COM interfaces. It is mainly used to assist in automated desktop publishing preparation tasks, including image text extraction, background processing, layer reconstruction, and bilingual file generation.</p>
+
+        <h2 id="globals">2. Basic Settings & View Controls</h2>
+        <div class="callout info">
+            <strong>Network and API Configuration</strong>
+            Before using the corresponding features, please enter the <b>API Key</b> at the top of the interface. If operating in a restricted network environment, check <b>Use Proxy</b> and confirm the proxy address. Configuration settings are saved automatically.
+        </div>
+        
+        <p><b>Image Preview Operations:</b></p>
+        <ul>
+            <li><kbd>Ctrl</kbd> + <kbd>Mouse Wheel</kbd>: Zoom in/out of the image.</li>
+            <li><kbd>Mouse Wheel</kbd>: Pan vertically when the image is zoomed in.</li>
+            <li><kbd>Delete</kbd>: Remove the selected files from the list on the left.</li>
+        </ul>
+
+        <h2 id="tab1-2">3. Standard Full-text OCR (Hidden)</h2>
+        <p>Suitable for extracting text from images with simple layout structures and no redundant visual interference elements.</p>
+        <ul class="step-list">
+            <li>Click <b>Add Files</b> to import target images.</li>
+            <li>Click <b>Auto Rotate</b> or use the <b>↺ / ↻</b> buttons to ensure the text is oriented horizontally.</li>
+            <li>Click <b>Start OCR</b> to begin processing. The program will extract text concurrently.</li>
+            <li>Verify and modify the recognition results in the <b>OCR RESULT</b> area on the right.</li>
+            <li>Click <b>Generate ATF</b> to export. Once complete, the system will attempt to automatically open the generated Word document.</li>
+        </ul>
+        <div class="callout warning">
+            <strong>Note:</strong>
+            Standard OCR extracts all visible text within the image. If the drawing contains a large amount of annotations or data that do not require translation, using Mask Mode is recommended.
+        </div>
+
+        <h2 id="tab3">4. Mask Mode (Tab 3)</h2>
+        <p>Suitable for images with complex layouts, slanted text, or content that does not require translation. By manually specifying the extraction areas, you constrain the AI's recognition scope and paragraph merging method.</p>
+        <ul class="step-list">
+            <li>Import the image and automatically or manually adjust it to a horizontal orientation to improve OCR accuracy.</li>
+            <li>Click <b>Batch AI Auto-Box</b> to run the initial AI text block positioning.</li>
+            <li>Manually adjust or draw extraction areas using the following mouse actions:
+                <div class="mouse-action">
+                    <span>Left-click & Drag</span>: Draw a rectangular extraction box.<br>
+                    <span>Left-click Points</span>: Click sequentially along edges to draw a polygon, then double-click or right-click to close it. Suitable for non-horizontal or non-vertical text.<br>
+                    <span>Right-click & Drag</span>: Draw a red erasure area to delete any extraction boxes it touches.
+                </div>
+            </li>
+            <li>Click <b>Start OCR</b>. The system will output numbered text paragraphs based on the selected areas.
+                <div class="mouse-action">
+                    <span>Single Image OCR</span>: If you adjusted boxes on a single image, click "Re-OCR" to process it again.<br>
+                    <span>Retry Failed</span>: If OCR fails for certain images due to network issues, click the "Start OCR" button again to retry only the failed images.
+                </div>
+            </li>
+            <li>After verifying the results, click <b>Generate ATF</b> to export the file.</li>
+        </ul>
+
+        <h2 id="tab4">5. Static Image to PSD (Tab 4)</h2>
+        <p>Converts static bitmaps (JPG/PNG) containing text into Photoshop files with the text background erased and editable text layers generated.</p>
+        <ul class="step-list">
+            <li>Import the image and use the same actions as the "Mask Mode" tab to box the text areas needing reconstruction. Ensure the box aligns closely with the text and does not include complex background graphics. To ensure text box position accuracy, image rotation and multi-point irregular masking are disabled in this feature area.</li>
+            <li>Adjust text alignment: When the mask is generated, the text alignment is determined and represented on the mask as "L" (Left-aligned), "C" (Center-aligned), or "R" (Right-aligned).
+                <div class="mouse-action">
+                    <span>Left-click Box</span>: Toggle between <b>[L] Left</b>, <b>[C] Center</b>, and <b>[R] Right</b> alignment.
+                </div>
+            </li>
+            <li>Search and select the target layout font in the <b>Base Font</b> dropdown menu (defaults to Arial).</li>
+            <li>Click <b>Build PSDs</b>.</li>
+            <li>The program will call Photoshop in the background to execute content-aware fill and layer generation. Please wait for the process to complete.<br> <b>Note:</b> Ensure there are no open and active editing windows/dialogs in Photoshop.<br> The created PS file contains text layers and three background layers: the original image, an AI-erased background layer, and a background restored using "Content-Aware Fill".<br>However, for PNG images with transparent backgrounds, only the original layer and a new background layer with the text area cut out are generated.</li>
+        </ul>
+        <div class="callout danger">
+            <strong>Important Considerations:</strong>
+            Adobe Photoshop must be installed on the system and must remain idle (without unhandled pop-ups or dialogs) during execution. The generated PSD file includes a hidden original reference layer, which can be used for position alignment and proofreading.
+        </div>
+
+        <div class="callout danger">
+            <strong>Known Characteristics:</strong>
+            1. Because AI only supports RGB, CMYK color images will exhibit color differences in the redrawn background layers.<br>2. The text box size strictly conforms to the drawn mask; selecting an oversized font may result in text overflow.<br>3. The font size of the text layer is calculated mathematically based on height and may differ from the original image.
+        </div>
+
+        <h2 id="tab5">6. PSD/AI Text Export & Import (Tab 5)</h2>
+        <p>Supports batch parsing of text layers from PSD or AI source files, and supports automatic re-import after translation and layout checking via pseudo-translation.</p>
+        <ul class="step-list">
+            <li><b>Extract Text:</b> Import <code>.psd</code> or <code>.ai</code> files. Check the <b>Pseudo</b> option if necessary. Click <b>Export</b>, and the system will generate individual bilingual files named after each source file (Word format for PSD, XLF format for AI).<br>
+                <i>Note: If the "Pseudo" option is checked, the system will also generate an additional minimal-sized PDF reference file with embedded fonts, where the text is replaced by placeholders (X/x/0) to check for layout issues or text truncation.</i>
+            </li>
+            <li>Proceed with external translation assignments.</li>
+            <li><b>Import Text:</b> Ensure the corresponding source files exist in the list. Click <b>Import Translation</b> and select the translated files (batch selection supported). The program will automatically match the filenames and update the source file's text content.</li>
+        </ul>
+        <div class="callout info">
+            <strong>Format Support Notes:</strong><br>
+            <b>Photoshop (.psd)</b>: Due to API limitations, the exported Word file cannot store mixed styles within a single layer (e.g., partial bolding). Manual style verification in PS is required after translation.<br>
+            <b>Illustrator (.ai)</b>: Utilizes an XML tag mechanism, supporting the retention and restoration of bold, color, italics, and sub/superscript attributes within the text.
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 40px 0;">
+
+        <h2 id="changelog">7. Changelog</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th width="80px">Version</th>
+                    <th>Updates</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>V 2.8</b></td>
+                    <td>1. Add a searchable system font dropdown for PSD creation.<br>2. Updated Tab 5 export logic to save individual files matched to source filenames<br>3. Added a "Pseudo" translation mode in PSD/AI exporting<br>4. The line spacing is more close to source image in created PSD files.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.7</b></td>
+                    <td>1. Rebuilt the rich text parsing engine using lexical analysis and an AST strategy to improve OCR parsing stability.<br>2. Mask Mode now supports polygon lasso drawing to avoid OCR errors caused by overlapping non-horizontal and vertical text masks.<br>3. Optimized the collision algorithm for the eraser tool.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.6</b></td>
+                    <td>Rebuilt the background layer generation logic for "PSD Builder", adding AI text erasure and redrawn background layers.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.5</b></td>
+                    <td>Adjusted model recognition strategy; optimized coordinate precision for PS layer generation to exactly match mask position and size.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.4</b></td>
+                    <td>Added static image to PSD function, supporting background content-aware fill and text layer reconstruction.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.3</b></td>
+                    <td>Added parsing functions for Adobe DTP engineering files, supporting PSD and AI formats.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.1</b></td>
+                    <td>Optimized the Auto-Box algorithm.</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.0</b></td>
+                    <td>Completely refactored OCR logic to a precise mask slice recognition mode.</td>
+                </tr>            </tbody>
+        </table>
+        
+        <p style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.9rem;">
+            &copy; 2026 Welocalize DTP Team. All rights reserved.
+        </p>
+    </div>
+
+</body>
+</html>

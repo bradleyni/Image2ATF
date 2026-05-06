@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeloDTP 图片准备工具 V2.8 - 使用手册</title>
+    <style>
+        :root {
+            --primary: #005a9e;
+            --secondary: #4f8ef7;
+            --success: #34d399;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-light: #f8fafc;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        .toc {
+            width: 260px;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 30px 20px;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+        }
+
+        .toc h3 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        .toc ul { list-style: none; padding: 0; }
+        .toc li { margin-bottom: 12px; }
+        .toc a {
+            text-decoration: none; color: var(--text-dark); font-weight: 500; transition: color 0.2s;
+        }
+        .toc a:hover { color: var(--secondary); }
+
+        .content {
+            margin-left: 300px; padding: 40px 60px; max-width: 900px;
+            background: white; min-height: 100vh; box-shadow: -2px 0 8px rgba(0,0,0,0.02);
+        }
+
+        h1 { font-size: 2.2rem; color: var(--primary); border-bottom: 3px solid var(--border); padding-bottom: 10px; }
+        h2 { font-size: 1.5rem; color: var(--primary); margin-top: 40px; border-left: 4px solid var(--secondary); padding-left: 15px; background: #f1f5f9; padding: 8px 15px; border-radius: 0 4px 4px 0;}
+        h3 { font-size: 1.2rem; color: #334155; margin-top: 25px; }
+        p { font-size: 1.05rem; }
+
+        .callout { padding: 15px 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        .info { background-color: #eff6ff; border-color: var(--secondary); }
+        .warning { background-color: #fffbeb; border-color: var(--warning); }
+        .danger { background-color: #fef2f2; border-color: var(--danger); }
+        .callout strong { display: block; margin-bottom: 8px; font-size: 1.05rem; }
+
+        .step-list { counter-reset: step-counter; list-style: none; padding: 0; }
+        .step-list li {
+            position: relative; padding: 12px 20px 12px 50px; margin-bottom: 10px;
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+        }
+        .step-list li::before {
+            counter-increment: step-counter; content: counter(step-counter);
+            position: absolute; left: 12px; top: 12px; width: 24px; height: 24px;
+            background-color: var(--secondary); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem;
+        }
+
+        .mouse-action { background: white; border: 1px solid var(--border); padding: 10px 15px; margin-top: 10px; border-radius: 6px; display: inline-block; font-size: 0.95rem; width: 100%; box-sizing: border-box;}
+        .mouse-action span { color: var(--secondary); font-weight: 600; margin-right: 10px;}
+
+        kbd {
+            background-color: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;
+            padding: 2px 6px; font-family: monospace; font-size: 0.9em; box-shadow: 0 1px 0 #cbd5e1;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.95rem; }
+        th, td { border: 1px solid var(--border); padding: 10px 15px; text-align: left; }
+        th { background-color: #f8fafc; color: var(--primary); }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; }
+            .toc { position: static; width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+            .content { margin-left: 0; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="toc">
+        <h3>导航目录</h3>
+        <ul>
+            <li><a href="#intro">1. 工具简介</a></li>
+            <li><a href="#globals">2. 基本设置与视图控制</a></li>
+            <li><a href="#tab1-2">3. 常规全文 OCR (已隐藏)</a></li>
+            <li><a href="#tab3">4. Mask 遮罩模式 (Tab 3)</a></li>
+            <li><a href="#tab4">5. 静态图生成 PSD (Tab 4)</a></li>
+            <li><a href="#tab5">6. PSD/AI 源文件互导 (Tab 5)</a></li>
+            <li><a href="#changelog">7. 版本更新历史</a></li>
+        </ul>
+    </div>
+
+    <div class="content">
+        <h1 id="intro">Welocalize DTP 图片准备工具 V2.8</h1>
+        <p>Welocalize DTP 图片准备工具集成了 Google Gemini 与 Anthropic Claude 模型，并支持调用 Adobe 软件 COM 接口。主要用于辅助完成图片文本提取、背景处理、图层重构及双语文件生成等自动化排版准备工作。</p>
+
+        <h2 id="globals">2. 基本设置与视图控制</h2>
+        <div class="callout info">
+            <strong>网络与密钥配置</strong>
+            使用对应功能前，请在界面顶部输入 <b>API Key</b>。若处于受限网络环境，请勾选 <b>Use Proxy</b> 并确认代理地址。配置信息会自动保存。
+        </div>
+        
+        <p><b>图片预览操作：</b></p>
+        <ul>
+            <li><kbd>Ctrl</kbd> + <kbd>鼠标滚轮</kbd>：放大/缩小图片。</li>
+            <li><kbd>鼠标滚轮</kbd>：在图片放大状态下进行上下平移。</li>
+            <li><kbd>Delete</kbd>：从左侧列表中移除选中的文件。</li>
+        </ul>
+
+        <h2 id="tab1-2">3. 常规全文 OCR （已隐藏）</h2>
+        <p>适用于排版结构简单、无冗余视觉干扰元素的图片文本提取。</p>
+        <ul class="step-list">
+            <li>点击 <b>Add Files</b> 导入目标图片。</li>
+            <li>点击 <b>Auto Rotate</b>（自动旋转）或使用 <b>↺ / ↻</b> 按钮，确保文本呈水平方向。</li>
+            <li>点击 <b>Start OCR</b> 开始处理。程序将并发提取文本。</li>
+            <li>在右侧 <b>OCR RESULT</b> 区域核对并修改识别结果。</li>
+            <li>点击 <b>Generate ATF</b> 导出。完成后系统将尝试自动打开生成的 Word 文档。</li>
+        </ul>
+        <div class="callout warning">
+            <strong>说明：</strong>
+            常规 OCR 会提取图像内所有可见文本。若图纸中包含大量无需翻译的标注或数据，建议使用遮罩模式。
+        </div>
+
+        <h2 id="tab3">4. Mask 遮罩模式 (Tab 3)</h2>
+        <p>适用于排版复杂、文本倾斜或包含无需翻译内容的图片。通过手动指定提取区域，约束 AI 的识别范围与段落合并方式。</p>
+        <ul class="step-list">
+            <li>导入图片，并自动或手动调整至水平方向，以提高 OCR 准确度。</li>
+            <li>点击 <b>AI 批量画框</b>，运行 AI 初步文本块定位。</li>
+            <li>手动调整或绘制提取区域，支持以下鼠标操作：
+                <div class="mouse-action">
+                    <span>左键拖拽</span>：绘制矩形提取框。<br>
+                    <span>左键单击</span>：逐点描边绘制多边形，最后通过双击或右键闭合，适用于不水平或垂直文本。<br>
+                    <span>右键拖拽</span>：绘制红色擦除区域，删除接触到的提取框。
+                </div>
+            </li>
+            <li>点击 <b>Start OCR</b>。系统将依据选定区域输出带有序号的文本段落。
+                <div class="mouse-action">
+                    <span>单图OCR</span>：如果单图调整了画框，可以点击“重新识别”来单独提取。<br>
+                    <span>失败重试</span>：如果因网络原因导致某些图片OCR失败，可以再次点击“开始OCR”按钮，程序仅对失败的图片进行重试。<br>
+                </div>
+            </li>
+            <li>检查结果后点击 <b>生成 ATF</b> 导出文件。</li>
+        </ul>
+
+        <h2 id="tab4">5. 静态图生成 PSD</h2>
+        <p>将包含文字的静态位图（JPG/PNG）转换为文字背景被擦除、且包含可编辑文本图层的 Photoshop 文件。</p>
+        <ul class="step-list">
+            <li>导入图片，使用与 "Mask 模式“标签页相同的操作框选需要重建的文本区域。请确保选框贴合文字且未包含复杂的背景图形。为了文本框位置的精度，此功能区下不提供图片旋转和多点不规则形状蒙版绘制。</li>
+            <li>调整文本对齐方式：遮罩生成的时候会判断文本对齐方式并在蒙版上以“L”（左对齐），“R”（右对齐）或者“C”（居中对齐）来表示。
+                <div class="mouse-action">
+                    <span>左键点击选框</span>：在 <b>[L] 左对齐</b>、<b>[C] 居中对齐</b>、<b>[R] 右对齐</b> 之间切换。
+                </div>
+            </li>
+            <li>在右侧工具栏的 <b>Base Font</b> 下拉菜单中搜索并选择目标排版字体（支持输入过滤，默认为 Arial）。</li>
+            <li>点击 <b>创建 PSD</b>。</li>
+            <li>程序将调用后台的 Photoshop 执行内容识别填充及图层生成，请等待流程结束。<br> <b>注意：</b> Photoshop中不要有打开并且处于编辑状态的窗口。<br> 创建的PS文件包含文本图层，以及三个背景图层：原图、AI 抹除背景图和“内容识别填充”恢复的背景图。<br>对于透明背景的 PNG 图片，则仅生成原图层和剪切掉文字区域的新透明背景图层。</li>
+        </ul>
+        <div class="callout danger">
+            <strong>注意事项：</strong>
+            系统需安装 Adobe Photoshop，且运行期间 Photoshop 必须处于空闲状态（无未处理的弹窗或对话框）。生成的 PSD 文件内包含一个隐藏的原始参考图层，可用于校对位置。
+        </div>
+
+        <div class="callout danger">
+            <strong>已知特性：</strong>
+            1. CMYK 颜色图片因为 AI 仅支持 RGB，因此重绘的背景图层会有一定色差。<br>2. 文本框大小严格遵循画框蒙版，若选择的字体过大，可能会导致文字溢流。<br>3. 文字图层的字号通过高度计算得出，可能与原图字号存在差异。
+        </div>
+
+        <h2 id="tab5">6. PSD/AI 文本导出和导入 (Tab 5)</h2>
+        <p>支持批量解析 PSD 或 AI 源文件中的文本图层，并支持翻译后的自动导回与假翻排版检查。</p>
+        <ul class="step-list">
+            <li><b>提取文本：</b> 导入 <code>.psd</code> 或 <code>.ai</code> 文件。可勾选 <b>假翻 (Pseudo)</b> 选项。点击 <b>Export</b> 后，系统将按源文件名称独立生成双语对照文件（PSD 生成 Word 格式，AI 生成 XLF 格式）。<br>
+                <i>注：若勾选了假翻选项，系统还会额外生成一份去除了图层、嵌入字体的 PDF 参考文件，其中的文字会被统一替换为占位符 (X/x/0)，用于检查排版布局或文本截断。</i>
+            </li>
+            <li>进行外部翻译作业。</li>
+            <li><b>导回文本：</b> 确保列表中存在对应的源文件，点击 <b>Import Translation</b> 并选择已翻译好的文件（支持批量选择）。程序将根据文件名称自动匹配并更新源文件的文本内容。</li>
+        </ul>
+        <div class="callout info">
+            <strong>格式支持说明：</strong><br>
+            <b>Photoshop (.psd)</b>：受限于 COM 接口，导出的 Word 无法存储单一图层内的混合样式（如同一句话部分加粗），翻译后需在 PS 中手动核对局部样式。<br>
+            <b>Illustrator (.ai)</b>：通过基于 XML 标签的分片解析机制，支持保留并还原文本内局部的加粗、颜色、斜体及上下标等富文本属性。
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 40px 0;">
+
+        <h2 id="changelog">7. 版本更新历史</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th width="80px">版本</th>
+                    <th>更新内容</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>V 2.8</b></td>
+                    <td>1. 优化 Tab 4 字体选择，提供支持搜索的系统字体下拉列表<br>2. PSD/AI 导出改为按文件独立导出 Word/XLF。<br>3. Tab 5 增加“假翻 (Pseudo)”模式<br>4. PSD 创建的文本框的行距更加接近原图</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.7</b></td>
+                    <td>1. 富文本解析引擎重构，采用词法分析加 AST 语法树方案，提高OCR结果解析稳定性。<br>2. Mask 模式新增多边形套索绘制功能，避免非水平以及垂直文本蒙版互相覆盖导致的OCR错误。<br>3. 优化擦除工具的判定算法。</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.6</b></td>
+                    <td>重构“PS文件生成”的背景图层生成逻辑，增加AI 抹除文字重绘背景图层功能。</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.5</b></td>
+                    <td>调整模型识别策略；优化 PS 图层生成的坐标精度，与蒙版位置和大小精确匹配。</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.4</b></td>
+                    <td>新增静态图转 PSD 功能 ，支持背景识别填充与文本图层重构。</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.3</b></td>
+                    <td>新增 Adobe 图形文件解析功能 ，支持 PSD 和 AI 格式。</td>
+                </tr>
+                <tr>
+                    <td><b>V 2.1</b></td>
+                    <td>优化 Auto-Box 自动画框算法。</td>
+                </tr>
+                 <tr>
+                    <td><b>V 2.0</b></td>
+                    <td>完全重构OCR逻辑为精准蒙版切片识别模式。</td>
+                </tr>           </tbody>
+        </table>
+        
+        <p style="text-align: center; color: var(--text-muted); margin-top: 40px; font-size: 0.9rem;">
+            &copy; 2026 Welocalize DTP Team. All rights reserved.
+        </p>
+    </div>
+
+</body>
+</html>
