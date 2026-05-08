@@ -2166,7 +2166,7 @@ class ImageToPsdWorker(QRunnable):
                 var jsonFile = new File("__JSON_PATH__");
                 jsonFile.open("r"); jsonFile.encoding = "UTF-8";
                 var jsonString = jsonFile.read(); jsonFile.close();
-                var data = eval("(" + jsonString + ")");
+                var data = JSON.parse(jsonString);
 
                 var doc = app.open(new File("__TARGET_IMG__"));
                 var docW = doc.width.value; 
