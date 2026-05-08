@@ -235,6 +235,50 @@ MISTRAL_MODELS = ['pixtral-large-latest', 'pixtral-12b-2409', 'mistral-small-lat
 def get_settings(): return QSettings(ORG_NAME, APP_NAME)
 def save_setting(key, value): s = get_settings(); s.setValue(key, value); s.sync()
 def load_setting(key, default=''): return get_settings().value(key, default)
+def remove_setting(key): s = get_settings(); s.remove(key); s.sync()
+
+_KEYRING_SERVICE = "Image2ATF"
+try:
+    import keyring
+except Exception:
+    keyring = None
+
+def save_secret(key: str, value: str):
+    # Secret fields are never written to QSettings. If keyring is unavailable,
+    # the key remains session-only and must be re-entered next time.
+    remove_setting(key)
+    if keyring is None:
+        return
+    try:
+        value = str(value or "").strip()
+        if value:
+            keyring.set_password(_KEYRING_SERVICE, key, value)
+        else:
+            try:
+                keyring.delete_password(_KEYRING_SERVICE, key)
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+def load_secret(key: str, default=''):
+    if keyring is not None:
+        try:
+            val = keyring.get_password(_KEYRING_SERVICE, key)
+            if val:
+                return val
+        except Exception:
+            pass
+    legacy = load_setting(key, '')
+    if legacy:
+        save_secret(key, legacy)
+        return legacy
+    return default
+
+def gemini_post(model: str, api_key: str, payload: dict, proxies: Optional[dict] = None, timeout: int = 120):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+    headers = {"x-goog-api-key": api_key, "content-type": "application/json"}
+    return requests.post(url, headers=headers, json=payload, proxies=proxies, timeout=timeout)
 
 def get_proxies(proxy_url: str, enabled: bool) -> Optional[dict]:
     if not enabled or not proxy_url.strip(): return None
@@ -314,15 +358,15 @@ def ocr_claude(image_path: str, api_key: str, model: str, proxies: Optional[dict
 
 def ocr_gemini(image_path: str, api_key: str, model: str, proxies: Optional[dict], rotation_angle: int = 0) -> str:
     b64, mime = _get_rotated_b64(image_path, rotation_angle)
-    resp = requests.post(
-        f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}',
-        json={'contents': [{'parts': [{'inline_data': {'mime_type': mime, 'data': b64}}, {'text': OCR_PROMPTS['gemini']}]}], 'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0}},
+    resp = gemini_post(
+        model, api_key,
+        {'contents': [{'parts': [{'inline_data': {'mime_type': mime, 'data': b64}}, {'text': OCR_PROMPTS['gemini']}]}], 'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0}},
         proxies=proxies, timeout=120
     )
     resp.raise_for_status()
     raw_ocr = resp.json()['candidates'][0]['content']['parts'][0]['text']
     def gemini_text_call(prompt_text):
-        r = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}', json={'contents': [{'parts': [{'text': prompt_text}]}], 'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0}}, proxies=proxies, timeout=60)
+        r = gemini_post(model, api_key, {'contents': [{'parts': [{'text': prompt_text}]}], 'generationConfig': {'maxOutputTokens': 4096, 'temperature': 0}}, proxies=proxies, timeout=60)
         r.raise_for_status()
         return r.json()['candidates'][0]['content']['parts'][0]['text']
     return _semantic_restructure(raw_ocr, gemini_text_call)
@@ -608,7 +652,7 @@ class AIOrientationWorker(QRunnable):
                 ans = res.text.strip().upper() if (res.candidates and res.candidates[0].content.parts) else ""
             else:
                 buf = io.BytesIO(); working_img.save(buf, format='PNG'); b64 = base64.b64encode(buf.getvalue()).decode()
-                resp = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key={self.api_key}', json={'contents': [{'parts': [{'inline_data': {'mime_type': 'image/png', 'data': b64}}, {'text': detect_prompt}]}], 'generationConfig': {'temperature': 0.0}}, proxies=self.proxy, timeout=60)
+                resp = gemini_post('gemini-3.1-flash-image-preview', self.api_key, {'contents': [{'parts': [{'inline_data': {'mime_type': 'image/png', 'data': b64}}, {'text': detect_prompt}]}], 'generationConfig': {'temperature': 0.0}}, proxies=self.proxy, timeout=60)
                 resp.raise_for_status()
                 ans = resp.json()['candidates'][0]['content']['parts'][0]['text'].strip().upper()
             angle = 0
@@ -647,7 +691,7 @@ class AIBoxDetectWorker(QRunnable):
                 text_res = res.text if (res.candidates and res.candidates[0].content.parts) else ""
             else:
                 buf = io.BytesIO(); working_img.save(buf, format='PNG'); b64 = base64.b64encode(buf.getvalue()).decode()
-                resp = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key={self.api_key}', json={'contents': [{'parts': [{'inline_data': {'mime_type': 'image/png', 'data': b64}}, {'text': prompt}]}], 'generationConfig': {'temperature': 0.0}}, proxies=self.proxy, timeout=60)
+                resp = gemini_post('gemini-3.1-flash-image-preview', self.api_key, {'contents': [{'parts': [{'inline_data': {'mime_type': 'image/png', 'data': b64}}, {'text': prompt}]}], 'generationConfig': {'temperature': 0.0}}, proxies=self.proxy, timeout=60)
                 resp.raise_for_status()
                 text_res = resp.json()['candidates'][0]['content']['parts'][0]['text']
             matches = re.findall(r'\[\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\]', text_res)
@@ -746,7 +790,7 @@ def ocr_mask_engine(image_path: str, polygons: list, rotation_angle: int, api_ty
         resp.raise_for_status()
         raw_text = resp.json()['content'][0]['text']
     else:
-        resp = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}', json={'contents': [{'parts': [{'inline_data': {'mime_type': mime, 'data': b64}}, {'text': dynamic_prompt}]}], 'generationConfig': {'temperature': 0}}, proxies=proxies, timeout=120)
+        resp = gemini_post(model, api_key, {'contents': [{'parts': [{'inline_data': {'mime_type': mime, 'data': b64}}, {'text': dynamic_prompt}]}], 'generationConfig': {'temperature': 0}}, proxies=proxies, timeout=120)
         resp.raise_for_status()
         raw_text = resp.json()['candidates'][0]['content']['parts'][0]['text']
     extracted = {}
@@ -1019,9 +1063,9 @@ class ApiConfigWidget(QWidget):
         self.key_edit.setPlaceholderText({'claude': 'sk-ant-...', 'gemini': 'AIza...', 'mistral': '...'}.get(api_name, '...'))
         self.key_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         if api_name in SETTINGS_KEYS:
-            saved_key = load_setting(SETTINGS_KEYS[api_name]['key'], '')
+            saved_key = load_secret(SETTINGS_KEYS[api_name]['key'], '')
             if saved_key: self.key_edit.setText(saved_key)
-            self.key_edit.textChanged.connect(lambda v, api=api_name: save_setting(SETTINGS_KEYS[api]['key'], v))
+            self.key_edit.textChanged.connect(lambda v, api=api_name: save_secret(SETTINGS_KEYS[api]['key'], v))
         layout.addWidget(self.key_edit, 1) 
         self._default_model = models[0] if models else ""
     def get_key(self): return self.key_edit.text().strip()
@@ -1679,7 +1723,7 @@ class PsdAIBoxDetectWorker(QRunnable):
                 text_res = res.text if (res.candidates and res.candidates[0].content.parts) else ""
             else:
                 buf = io.BytesIO(); working_img.save(buf, format='PNG'); b64 = base64.b64encode(buf.getvalue()).decode()
-                resp = requests.post(f'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key={self.api_key}', json={'contents': [{'parts': [{'inline_data': {'mime_type': 'image/png', 'data': b64}}, {'text': prompt}]}], 'generationConfig': {'temperature': 0.0}}, proxies=self.proxy, timeout=60)
+                resp = gemini_post('gemini-3.1-flash-image-preview', self.api_key, {'contents': [{'parts': [{'inline_data': {'mime_type': 'image/png', 'data': b64}}, {'text': prompt}]}], 'generationConfig': {'temperature': 0.0}}, proxies=self.proxy, timeout=60)
                 resp.raise_for_status()
                 text_res = resp.json()['candidates'][0]['content']['parts'][0]['text']
                 
