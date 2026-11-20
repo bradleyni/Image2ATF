@@ -5,7 +5,7 @@ Image2ATF is a desktop tool for extracting text from images and generating dual-
 The main script is:
 
 ```text
-Image2ATF_V2.8.py
+Image2ATF_V2.9.17.py
 ```
 
 ## Features
@@ -132,7 +132,7 @@ install_windows.bat
 Run the main Python script:
 
 ```bash
-python Image2ATF_V2.8.py
+python Image2ATF_V2.9.17.py
 ```
 
 On Windows, you can also use:
@@ -203,7 +203,7 @@ These markers are processed when generating the Word output.
 
 ```text
 .
-├── Image2ATF_V2.8.py
+├── Image2ATF_V2.9.17.py
 ├── requirements.txt
 ├── README.md
 ├── LICENSE
