@@ -8,6 +8,10 @@ The main script is:
 Image2ATF_V2.9.17.py
 ```
 
+## Version history
+
+See the [changelog](CHANGELOG.md) for changes by version and links to archived source. When publishing a new version, update the launch scripts and the changelog. Archive the previous main script and update its link in the changelog.
+
 ## Features
 
 - OCR text extraction from images
